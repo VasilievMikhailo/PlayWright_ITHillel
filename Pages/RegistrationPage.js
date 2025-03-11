@@ -3,22 +3,24 @@ import { expect } from '@playwright/test';
 export class RegistrationPage {
   constructor(page) {
     this.page = page;
+
+    this.registerButtonToOpenRegisterPopUp = page.locator('.hero-descriptor_btn.btn.btn-primary');
+
     this.nameInput = page.locator('#signupName');
     this.lastNameInput = page.locator('#signupLastName');
     this.emailInput = page.locator('#signupEmail');
     this.passwordInput = page.locator('#signupPassword');
     this.repeatPasswordInput = page.locator('#signupRepeatPassword');
     this.registerButton = page.locator('.btn.btn-primary:has-text("Register")');
-    this.nameError = page.locator('.invalid-feedback');
-    this.openRegisterButton = page.locator('.hero-descriptor_btn.btn.btn-primary');
+    this.textError = page.locator('.invalid-feedback');
   }
 
   async open() {
     await this.page.goto('https://guest:welcome2qauto@qauto.forstudy.space/');
-    await this.openRegisterButton.click();
+    await this.registerButtonToOpenRegisterPopUp.click();
   }
 
-  async fillRegistrationForm({ name = '', lastName, email, password, repeatPassword }) {
+  async fillRegistrationForm({ name, lastName, email, password, repeatPassword }) {
     await this.nameInput.fill(name);
     await this.lastNameInput.fill(lastName);
     await this.emailInput.fill(email);
@@ -30,9 +32,14 @@ export class RegistrationPage {
     return await this.registerButton.isDisabled();
   }
 
-  async checkNameError(expectedText, expectedColor = 'rgb(220, 53, 69)') {
-    await expect(this.nameError).toHaveText(expectedText);
-    const color = await this.nameError.evaluate(el => getComputedStyle(el).color);
+  async checkErrorField(fieldId, expectedText, expectedColor = 'rgb(220, 53, 69)') {
+    const errorLocator = this.page.locator(`#${fieldId}`).locator('..').locator('.invalid-feedback');
+  
+    await expect(errorLocator).toBeVisible();
+
+    await expect(errorLocator).toHaveText(expectedText);
+  
+    const color = await errorLocator.evaluate(el => getComputedStyle(el).color);
     expect(color).toBe(expectedColor);
   }
 }
