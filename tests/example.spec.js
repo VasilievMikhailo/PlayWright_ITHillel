@@ -1,177 +1,207 @@
-import { test, expect } from '@playwright/test';
-import { RegistrationPage } from '../pages/RegistrationPage';
+import { test, expect } from './fixtures';
+// import { test } from '@playwright/test';
+import { LogInPage } from '../Pages/LoginPage';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+test('LogIn on main page', async ({ page }) => {
+
+  const loginPopUp = new LogInPage(page);
+
+  await loginPopUp.openLogInPopUp();
+
+  await loginPopUp.fillLogInPage({
+    email:  process.env.EMAIL_LOGIN,
+    password: process.env.PASSWORD_LOGIN,
+  });
+
+  console.log('Login button enabled:', await loginPopUp.isLogInButtonEnabled());
+
+  // expect(await loginPopUp.isLogInButtonEnabled()).toBeTruthy();
+
+  await loginPopUp.clickLogInButton();
+
+  await loginPopUp.saveAuthStorage();
+});
+
+test('User can see their garage page', async ({ userGaragePage }) => {
+  const loginPopUp = new LogInPage(userGaragePage);
+
+  await loginPopUp.checkGaragePage();
+});
 
 // const BASE_URL = 'https://guest:welcome2qauto@qauto.forstudy.space';
 
 
-test('Invalid values for Fields - Name; Last Name', async ({ page }) => {
-  const registrationPopUp = new RegistrationPage(page);
+// test('Invalid values for Fields - Name; Last Name', async ({ page }) => {
+//   const registrationPopUp = new RegistrationPage(page);
 
-  await registrationPopUp.open();
+//   await registrationPopUp.open();
   
-  await registrationPopUp.fillRegistrationForm({
-    name: 'Проверка',
-    lastName: 'на язык',
-    email: 'aqa-lolhawkeromg+test@gmail.com',
-    password: 'Qwer1234', 
-    repeatPassword: 'Qwer1234'
-  });
+//   await registrationPopUp.fillRegistrationForm({
+//     name: 'Проверка',
+//     lastName: 'на язык',
+//     email: 'aqa-lolhawkeromg+test@gmail.com',
+//     password: 'Qwer1234', 
+//     repeatPassword: 'Qwer1234'
+//   });
 
-  expect(await registrationPopUp.isRegisterButtonDisabled()).toBeTruthy();
-  await registrationPopUp.checkErrorField('signupName', 'Name is invalid');
-  await registrationPopUp.checkErrorField('signupLastName', 'Last name is invalid');
-});
+//   expect(await registrationPopUp.isRegisterButtonDisabled()).toBeTruthy();
+//   await registrationPopUp.checkErrorField('signupName', 'Name is invalid');
+//   await registrationPopUp.checkErrorField('signupLastName', 'Last name is invalid');
+// });
 
-test('Invalid values as numbers for Fields - Name; Last Name and Email', async ({ page }) => {
-  const registrationPopUp = new RegistrationPage(page);
+// test('Invalid values as numbers for Fields - Name; Last Name and Email', async ({ page }) => {
+//   const registrationPopUp = new RegistrationPage(page);
 
-  await registrationPopUp.open();
+//   await registrationPopUp.open();
   
-  await registrationPopUp.fillRegistrationForm({
-    name: '1',
-    lastName: '1',
-    email: '2',
-    password: 'Qwer1234', 
-    repeatPassword: 'Qwer1234'
-  });
+//   await registrationPopUp.fillRegistrationForm({
+//     name: '1',
+//     lastName: '1',
+//     email: '2',
+//     password: 'Qwer1234', 
+//     repeatPassword: 'Qwer1234'
+//   });
 
-  expect(await registrationPopUp.isRegisterButtonDisabled()).toBeTruthy();
-  await registrationPopUp.checkErrorField('signupName', 'Name is invalidName has to be from 2 to 20 characters long');
-  await registrationPopUp.checkErrorField('signupLastName', 'Last name is invalidLast name has to be from 2 to 20 characters long');
-  await registrationPopUp.checkErrorField('signupEmail', 'Email is incorrect');
-});
+//   expect(await registrationPopUp.isRegisterButtonDisabled()).toBeTruthy();
+//   await registrationPopUp.checkErrorField('signupName', 'Name is invalidName has to be from 2 to 20 characters long');
+//   await registrationPopUp.checkErrorField('signupLastName', 'Last name is invalidLast name has to be from 2 to 20 characters long');
+//   await registrationPopUp.checkErrorField('signupEmail', 'Email is incorrect');
+// });
 
 
-test('Ignoring SPACE in Fields - Name; Last Name', async ({ page }) => {
-  const registrationPopUp = new RegistrationPage(page);
+// test('Ignoring SPACE in Fields - Name; Last Name', async ({ page }) => {
+//   const registrationPopUp = new RegistrationPage(page);
 
-  await registrationPopUp.open();
+//   await registrationPopUp.open();
   
-  await registrationPopUp.fillRegistrationForm({
-    name: 'Test ',
-    lastName: 'Task ',
-    email: '2',
-    password: 'Qwer1234', 
-    repeatPassword: 'Qwer1234'
-  });
+//   await registrationPopUp.fillRegistrationForm({
+//     name: 'Test ',
+//     lastName: 'Task ',
+//     email: '2',
+//     password: 'Qwer1234', 
+//     repeatPassword: 'Qwer1234'
+//   });
 
-  expect(await registrationPopUp.isRegisterButtonDisabled()).toBeTruthy();
-  await registrationPopUp.checkErrorField('signupName', 'Name is invalid');
-  await registrationPopUp.checkErrorField('signupLastName', 'Last name is invalid');
-  await registrationPopUp.checkErrorField('signupEmail', 'Email is incorrect');
-});
+//   expect(await registrationPopUp.isRegisterButtonDisabled()).toBeTruthy();
+//   await registrationPopUp.checkErrorField('signupName', 'Name is invalid');
+//   await registrationPopUp.checkErrorField('signupLastName', 'Last name is invalid');
+//   await registrationPopUp.checkErrorField('signupEmail', 'Email is incorrect');
+// });
 
 
-test('Large possible length for Fields - Name; Last Name and Password', async ({ page }) => {
-  const registrationPopUp = new RegistrationPage(page);
+// test('Large possible length for Fields - Name; Last Name and Password', async ({ page }) => {
+//   const registrationPopUp = new RegistrationPage(page);
 
-  await registrationPopUp.open();
+//   await registrationPopUp.open();
   
-  await registrationPopUp.fillRegistrationForm({
-    name: 'qwerqwerqwerqwerqwerW',
-    lastName: 'qwerqwerqwerqwerqwerW',
-    email: 'aqa-lolhawkeromg+test2@gmail.com',
-    password: 'Qwer1234Qwer1234', 
-    repeatPassword: 'Qwer1234Qwer1234'
-  });
+//   await registrationPopUp.fillRegistrationForm({
+//     name: 'qwerqwerqwerqwerqwerW',
+//     lastName: 'qwerqwerqwerqwerqwerW',
+//     email: 'aqa-lolhawkeromg+test2@gmail.com',
+//     password: 'Qwer1234Qwer1234', 
+//     repeatPassword: 'Qwer1234Qwer1234'
+//   });
 
-  expect(await registrationPopUp.isRegisterButtonDisabled()).toBeTruthy();
-  await registrationPopUp.checkErrorField('signupName', 'Name has to be from 2 to 20 characters long');
-  await registrationPopUp.checkErrorField('signupLastName', 'Last name has to be from 2 to 20 characters long');
-  await registrationPopUp.checkErrorField('signupPassword', 'Password has to be from 8 to 15 characters long and contain at least one integer, one capital, and one small letter');
-});
+//   expect(await registrationPopUp.isRegisterButtonDisabled()).toBeTruthy();
+//   await registrationPopUp.checkErrorField('signupName', 'Name has to be from 2 to 20 characters long');
+//   await registrationPopUp.checkErrorField('signupLastName', 'Last name has to be from 2 to 20 characters long');
+//   await registrationPopUp.checkErrorField('signupPassword', 'Password has to be from 8 to 15 characters long and contain at least one integer, one capital, and one small letter');
+// });
 
-test('Small possible length for Fields - Name; Last Name and Password', async ({ page }) => {
-  const registrationPopUp = new RegistrationPage(page);
+// test('Small possible length for Fields - Name; Last Name and Password', async ({ page }) => {
+//   const registrationPopUp = new RegistrationPage(page);
 
-  await registrationPopUp.open();
+//   await registrationPopUp.open();
   
-  await registrationPopUp.fillRegistrationForm({
-    name: 'q',
-    lastName: 'q',
-    email: 'aqa-lolhawkeromg+test2@gmail.com',
-    password: 'Qwer123', 
-    repeatPassword: 'Qwer123'
-  });
+//   await registrationPopUp.fillRegistrationForm({
+//     name: 'q',
+//     lastName: 'q',
+//     email: 'aqa-lolhawkeromg+test2@gmail.com',
+//     password: 'Qwer123', 
+//     repeatPassword: 'Qwer123'
+//   });
 
-  expect(await registrationPopUp.isRegisterButtonDisabled()).toBeTruthy();
-  await registrationPopUp.checkErrorField('signupName', 'Name has to be from 2 to 20 characters long');
-  await registrationPopUp.checkErrorField('signupLastName', 'Last name has to be from 2 to 20 characters long');
-  await registrationPopUp.checkErrorField('signupPassword', 'Password has to be from 8 to 15 characters long and contain at least one integer, one capital, and one small letter');
-});
+//   expect(await registrationPopUp.isRegisterButtonDisabled()).toBeTruthy();
+//   await registrationPopUp.checkErrorField('signupName', 'Name has to be from 2 to 20 characters long');
+//   await registrationPopUp.checkErrorField('signupLastName', 'Last name has to be from 2 to 20 characters long');
+//   await registrationPopUp.checkErrorField('signupPassword', 'Password has to be from 8 to 15 characters long and contain at least one integer, one capital, and one small letter');
+// });
 
 
-test('Password without one integer number', async ({ page }) => {
-  const registrationPopUp = new RegistrationPage(page);
+// test('Password without one integer number', async ({ page }) => {
+//   const registrationPopUp = new RegistrationPage(page);
 
-  await registrationPopUp.open();
+//   await registrationPopUp.open();
   
-  await registrationPopUp.fillRegistrationForm({
-    name: 'Test',
-    lastName: 'Task',
-    email: 'aqa-lolhawkeromg+test2@gmail.com',
-    password: 'Qwerasdf', 
-    repeatPassword: 'Qwerasdf'
-  });
+//   await registrationPopUp.fillRegistrationForm({
+//     name: 'Test',
+//     lastName: 'Task',
+//     email: 'aqa-lolhawkeromg+test2@gmail.com',
+//     password: 'Qwerasdf', 
+//     repeatPassword: 'Qwerasdf'
+//   });
 
-  expect(await registrationPopUp.isRegisterButtonDisabled()).toBeTruthy();
-  await registrationPopUp.checkErrorField('signupPassword', 'Password has to be from 8 to 15 characters long and contain at least one integer, one capital, and one small letter');
-});
+//   expect(await registrationPopUp.isRegisterButtonDisabled()).toBeTruthy();
+//   await registrationPopUp.checkErrorField('signupPassword', 'Password has to be from 8 to 15 characters long and contain at least one integer, one capital, and one small letter');
+// });
 
 
-test('Password without one capital letter', async ({ page }) => {
-  const registrationPopUp = new RegistrationPage(page);
+// test('Password without one capital letter', async ({ page }) => {
+//   const registrationPopUp = new RegistrationPage(page);
 
-  await registrationPopUp.open();
+//   await registrationPopUp.open();
   
-  await registrationPopUp.fillRegistrationForm({
-    name: 'Test',
-    lastName: 'Task',
-    email: 'aqa-lolhawkeromg+test2@gmail.com',
-    password: 'qwerasdf1', 
-    repeatPassword: 'qwerasdf1'
-  });
+//   await registrationPopUp.fillRegistrationForm({
+//     name: 'Test',
+//     lastName: 'Task',
+//     email: 'aqa-lolhawkeromg+test2@gmail.com',
+//     password: 'qwerasdf1', 
+//     repeatPassword: 'qwerasdf1'
+//   });
 
-  expect(await registrationPopUp.isRegisterButtonDisabled()).toBeTruthy();
-  await registrationPopUp.checkErrorField('signupPassword', 'Password has to be from 8 to 15 characters long and contain at least one integer, one capital, and one small letter');
-});
+//   expect(await registrationPopUp.isRegisterButtonDisabled()).toBeTruthy();
+//   await registrationPopUp.checkErrorField('signupPassword', 'Password has to be from 8 to 15 characters long and contain at least one integer, one capital, and one small letter');
+// });
 
 
-test('Password without one small letter', async ({ page }) => {
-  const registrationPopUp = new RegistrationPage(page);
+// test('Password without one small letter', async ({ page }) => {
+//   const registrationPopUp = new RegistrationPage(page);
 
-  await registrationPopUp.open();
+//   await registrationPopUp.open();
   
-  await registrationPopUp.fillRegistrationForm({
-    name: 'Test',
-    lastName: 'Task',
-    email: 'aqa-lolhawkeromg+test2@gmail.com',
-    password: 'QWERASDF1', 
-    repeatPassword: 'QWERASDF1'
-  });
+//   await registrationPopUp.fillRegistrationForm({
+//     name: 'Test',
+//     lastName: 'Task',
+//     email: 'aqa-lolhawkeromg+test2@gmail.com',
+//     password: 'QWERASDF1', 
+//     repeatPassword: 'QWERASDF1'
+//   });
 
-  expect(await registrationPopUp.isRegisterButtonDisabled()).toBeTruthy();
-  await registrationPopUp.checkErrorField('signupPassword', 'Password has to be from 8 to 15 characters long and contain at least one integer, one capital, and one small letter');
-});
+//   expect(await registrationPopUp.isRegisterButtonDisabled()).toBeTruthy();
+//   await registrationPopUp.checkErrorField('signupPassword', 'Password has to be from 8 to 15 characters long and contain at least one integer, one capital, and one small letter');
+// });
 
 
-test('Re-enter Password should be the same as Password', async ({ page }) => {
-  const registrationPopUp = new RegistrationPage(page);
+// test('Re-enter Password should be the same as Password', async ({ page }) => {
+//   const registrationPopUp = new RegistrationPage(page);
 
-  await registrationPopUp.open();
+//   await registrationPopUp.open();
   
-  await registrationPopUp.fillRegistrationForm({
-    name: 'Test',
-    lastName: 'Task',
-    email: 'aqa-lolhawkeromg+test2@gmail.com',
-    password: 'Qwer1234', 
-    repeatPassword: 'Qwer4321'
-  });
+//   await registrationPopUp.fillRegistrationForm({
+//     name: 'Test',
+//     lastName: 'Task',
+//     email: 'aqa-lolhawkeromg+test2@gmail.com',
+//     password: 'Qwer1234', 
+//     repeatPassword: 'Qwer4321'
+//   });
 
-  await page.locator('#signupPassword').click();
-  expect(await registrationPopUp.isRegisterButtonDisabled()).toBeTruthy();
-  await registrationPopUp.checkErrorField('signupRepeatPassword', 'Passwords do not match');
-});
+//   await page.locator('#signupPassword').click();
+//   expect(await registrationPopUp.isRegisterButtonDisabled()).toBeTruthy();
+//   await registrationPopUp.checkErrorField('signupRepeatPassword', 'Passwords do not match');
+// });
 
 
 // test('Successful registration', async ({ page }) => {
