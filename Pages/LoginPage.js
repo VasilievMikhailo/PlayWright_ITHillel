@@ -19,7 +19,6 @@ export class LogInPage {
 
   async openLogInPopUp() {
     await this.page.goto(process.env.BASE_URL);
-
     await this.signInButton.click();
   }
 
