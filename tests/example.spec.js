@@ -1,35 +1,329 @@
-import { test, expect } from './fixtures';
+// import { test, expect } from './fixtures';
 // import { test } from '@playwright/test';
-import { LogInPage } from '../Pages/LoginPage';
+// import { LogInPage } from '../Pages/LoginPage';
 import dotenv from 'dotenv';
+// import { test, expect } from '@playwright/test';
+import { test, expect, request } from '@playwright/test';
 
 dotenv.config();
 
-test('LogIn on main page', async ({ page }) => {
+test('POST to ADD a car, GET car by ID, DELETE the car by ID, DELETE again (negative case), and GET again (negative case)', async ({ page }) => {
+  await page.goto(process.env.BASE_URL);
 
-  const loginPopUp = new LogInPage(page);
+  await page.locator('.btn.btn-outline-white.header_signin').click();
+  await page.locator('#signinEmail').fill(process.env.EMAIL_LOGIN);
+  await page.locator('#signinPassword').fill(process.env.PASSWORD_LOGIN);
+  await page.locator('.btn.btn-primary:has-text("Login")').click();
 
-  await loginPopUp.openLogInPopUp();
+  console.log("Авторизация успешна");
 
-  await loginPopUp.fillLogInPage({
-    email:  process.env.EMAIL_LOGIN,
-    password: process.env.PASSWORD_LOGIN,
+  await page.waitForURL('https://guest:welcome2qauto@qauto.forstudy.space/panel/garage');
+
+  const cookies = await page.context().cookies();
+  const sidCookie = cookies.find(cookie => cookie.name === 'sid');
+
+  if (!sidCookie) {
+    throw new Error('Ошибка: Токен не найден в cookies!');
+  }
+
+  const expires = sidCookie.expires || 0;
+  const httpOnly = sidCookie.httpOnly !== undefined ? sidCookie.httpOnly : true;
+  const secure = sidCookie.secure !== undefined ? sidCookie.secure : true;
+  const sameSite = sidCookie.sameSite || 'Lax';
+
+  const client = await request.newContext({
+    extraHTTPHeaders: {
+      'Content-Type': 'application/json'
+    },
+    storageState: {
+      cookies: [{
+        name: 'sid',
+        value: sidCookie.value,
+        domain: 'qauto.forstudy.space',
+        path: '/',
+        expires: expires,
+        httpOnly: httpOnly,
+        secure: secure,
+        sameSite: sameSite
+      }]
+    }
   });
 
-  console.log('Login button enabled:', await loginPopUp.isLogInButtonEnabled());
+  // 1. Создаем машину (POST)
+  const postResponse = await client.post('https://qauto.forstudy.space/api/cars', {
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    data: {
+      "carBrandId": 1,
+      "carModelId": 1,
+      "mileage": 122
+    }
+  });
 
-  // expect(await loginPopUp.isLogInButtonEnabled()).toBeTruthy();
+  console.log('POST Response status:', postResponse.status());
+  const postResponseBody = await postResponse.json();
+  console.log('POST Response body:', postResponseBody);
 
-  await loginPopUp.clickLogInButton();
+  const carId = postResponseBody.data.id;
+  expect(carId).toBeDefined();
+  console.log('ID созданной машины (POST):', carId);
 
-  await loginPopUp.saveAuthStorage();
+  // 2. Получаем машину по ID (GET)
+  const getResponse = await client.get(`https://qauto.forstudy.space/api/cars/${carId}`);
+
+  console.log('GET Response status:', getResponse.status());
+  const getResponseBody = await getResponse.json();
+  console.log('GET Response body:', getResponseBody);
+
+  expect(getResponse.status()).toBe(200);
+
+  expect(getResponseBody.data.id).toBe(carId);
+  expect(getResponseBody.data.carBrandId).toBe(1);
+  expect(getResponseBody.data.carModelId).toBe(1);
+  expect(getResponseBody.data.mileage).toBe(122);
+
+  // 3. Удаляем машину по ID (DELETE)
+  const deleteResponse = await client.delete(`https://qauto.forstudy.space/api/cars/${carId}`);
+
+  console.log('DELETE Response status:', deleteResponse.status());
+  const deleteResponseBody = await deleteResponse.json();
+  console.log('DELETE Response body:', deleteResponseBody);
+
+  expect(deleteResponse.status()).toBe(200);
+
+  // 4. Попытка удалить машину повторно (негативный кейс)
+  const deleteAgainResponse = await client.delete(`https://qauto.forstudy.space/api/cars/${carId}`);
+
+  console.log('DELETE Again Response status:', deleteAgainResponse.status());
+  const deleteAgainResponseBody = await deleteAgainResponse.json();
+  console.log('DELETE Again Response body:', deleteAgainResponseBody);
+
+  expect(deleteAgainResponse.status()).toBe(404);
+
+  // 5. Проверяем, что машина больше не существует, делаем GET запрос после удаления
+  const getAfterDeleteResponse = await client.get(`https://qauto.forstudy.space/api/cars/${carId}`);
+
+  console.log('GET After DELETE Response status:', getAfterDeleteResponse.status());
+  const getAfterDeleteResponseBody = await getAfterDeleteResponse.json();
+  console.log('GET After DELETE Response body:', getAfterDeleteResponseBody);
+
+  expect(getAfterDeleteResponse.status()).toBe(404);
 });
 
-test('User can see their garage page', async ({ userGaragePage }) => {
-  const loginPopUp = new LogInPage(userGaragePage);
 
-  await loginPopUp.checkGaragePage();
+// test('POST to ADD a car', async ({ page }) => {
+//   await page.goto(process.env.BASE_URL);
+
+//   await page.locator('.btn.btn-outline-white.header_signin').click();
+//   await page.locator('#signinEmail').fill(process.env.EMAIL_LOGIN);
+//   await page.locator('#signinPassword').fill(process.env.PASSWORD_LOGIN);
+//   await page.locator('.btn.btn-primary:has-text("Login")').click();
+
+//   console.log("Авторизация успешна");
+
+//   // await page.locator('.btn.btn-primary:has-text("Add car")').click();
+
+//   // Ожидаем редирект на страницу профиля
+//   await page.waitForURL('https://guest:welcome2qauto@qauto.forstudy.space/panel/garage');
+
+//   const localStorageData = await page.evaluate(() => Object.assign({}, localStorage));
+//   console.log('Local Storage Data:', localStorageData);
+
+//   const sessionStorageData = await page.evaluate(() => Object.assign({}, sessionStorage));
+//   console.log('Session Storage Data:', sessionStorageData);
+
+//   const cookies = await page.context().cookies();
+//   console.log('Cookies:', cookies);
+
+//   const sidCookie = cookies.find(cookie => cookie.name === 'sid');
+
+//   if (!sidCookie) {
+//     throw new Error('Ошибка: Токен не найден в cookies!');
+//   }
+  
+//   // Устанавливаем expires в 0 или какой-то другой подходящий момент
+//   const expires = sidCookie.expires || 0;
+  
+//   // Устанавливаем httpOnly, если оно отсутствует
+//   const httpOnly = sidCookie.httpOnly !== undefined ? sidCookie.httpOnly : true;  // Предполагаем, что cookie httpOnly должно быть true
+  
+//   // Устанавливаем secure, если оно отсутствует
+//   const secure = sidCookie.secure !== undefined ? sidCookie.secure : true;  // Предполагаем, что cookie secure должно быть true, если используем HTTPS
+  
+//   // Устанавливаем sameSite, если оно отсутствует
+//   const sameSite = sidCookie.sameSite || 'Lax';  // Предполагаем, что sameSite должно быть 'Lax' по умолчанию
+  
+//   const client = await request.newContext({
+//     extraHTTPHeaders: {
+//       'Content-Type': 'application/json'
+//     },
+//     storageState: {
+//       cookies: [{
+//         name: 'sid',
+//         value: sidCookie.value,
+//         domain: 'qauto.forstudy.space',
+//         path: '/',
+//         expires: expires,
+//         httpOnly: httpOnly,
+//         secure: secure,
+//         sameSite: sameSite  // добавляем sameSite
+//       }]
+//     }
+//   });
+  
+
+//   const response = await client.post('https://qauto.forstudy.space/api/cars', {
+//     headers: {
+//       'Content-Type': 'application/json',  // Указываем тип контента
+//     },
+//     data: JSON.stringify({
+//       "carBrandId": 1,  // Идентификатор бренда
+//       "carModelId": 1,  // Идентификатор модели
+//       "mileage": 122
+//     })
+//   });
+  
+//   console.log('Response status:', response.status());
+//   console.log('Response body:', await response.json());
+  
+//   expect(response.status()).toBe(201);
+// });
+
+
+
+// test('GET car by ID', async ({ page }) => {
+//   await page.goto(process.env.BASE_URL);
+
+//   await page.locator('.btn.btn-outline-white.header_signin').click();
+//   await page.locator('#signinEmail').fill(process.env.EMAIL_LOGIN);
+//   await page.locator('#signinPassword').fill(process.env.PASSWORD_LOGIN);
+//   await page.locator('.btn.btn-primary:has-text("Login")').click();
+
+//   console.log("Авторизация успешна");
+
+//   // await page.locator('.btn.btn-primary:has-text("Add car")').click();
+
+//   await page.waitForURL('https://guest:welcome2qauto@qauto.forstudy.space/panel/garage');
+
+//   const localStorageData = await page.evaluate(() => Object.assign({}, localStorage));
+//   console.log('Local Storage Data:', localStorageData);
+
+//   const sessionStorageData = await page.evaluate(() => Object.assign({}, sessionStorage));
+//   console.log('Session Storage Data:', sessionStorageData);
+
+//   const cookies = await page.context().cookies();
+//   console.log('Cookies:', cookies);
+
+//   const sidCookie = cookies.find(cookie => cookie.name === 'sid');
+
+//   if (!sidCookie) {
+//     throw new Error('Ошибка: Токен не найден в cookies!');
+//   }
+  
+//   const expires = sidCookie.expires || 0;
+  
+//   const httpOnly = sidCookie.httpOnly !== undefined ? sidCookie.httpOnly : true; 
+  
+//   const secure = sidCookie.secure !== undefined ? sidCookie.secure : true; 
+  
+//   const sameSite = sidCookie.sameSite || 'Lax'; 
+  
+//   const client = await request.newContext({
+//     extraHTTPHeaders: {
+//       'Content-Type': 'application/json'
+//     },
+//     storageState: {
+//       cookies: [{
+//         name: 'sid',
+//         value: sidCookie.value,
+//         domain: 'qauto.forstudy.space',
+//         path: '/',
+//         expires: expires,
+//         httpOnly: httpOnly,
+//         secure: secure,
+//         sameSite: sameSite  // добавляем sameSite
+//       }]
+//     }
+//   });
+  
+
+//   const response = await client.get('https://qauto.forstudy.space/api/cars/300893', {
+//     body: JSON.stringify({
+//       "id": 300893,
+//       // "carBrandId": 1, 
+//       // "carModelId": 1,  
+//       // "mileage": 122
+//     })
+//   });
+  
+//   console.log('Response status:', response.status());
+//   console.log('Response body:', await response.json());
+  
+//   expect(response.status()).toBe(200);
+// });
+
+test('Перевірка підміни response body на сторінці профілю', async ({ page }) => {
+
+  await page.route('https://qauto.forstudy.space/api/users/profile', async (route) => {
+    const originalResponse = await route.fetch();
+    let json = await originalResponse.json();
+
+
+    json.data.userId = 99999;
+    json.data.name = "Inspector";
+    json.data.lastName = "Request";
+
+    console.log('Modified Response:', json);
+
+
+    await route.fulfill({
+        status: originalResponse.status(),
+        contentType: 'application/json',
+        body: JSON.stringify(json),
+        headers: { 'Cache-Control': 'no-store' }
+    });
+  });
+
+  await page.goto(process.env.BASE_URL);
+
+  await page.locator('.btn.btn-outline-white.header_signin').click();
+  await page.locator('#signinEmail').fill(process.env.EMAIL_LOGIN);
+  await page.locator('#signinPassword').fill(process.env.PASSWORD_LOGIN);
+  await page.locator('.btn.btn-primary:has-text("Login")').click();
+    
+
+  await page.locator('a[class*="btn-sidebar"]:has-text("Profile")').click();
+
+  await expect(page.locator('.profile_name.display-4')).toHaveText('Inspector Request');
 });
+
+
+// test('LogIn on main page', async ({ page }) => {
+
+//   const loginPopUp = new LogInPage(page);
+
+//   await loginPopUp.openLogInPopUp();
+
+//   await loginPopUp.fillLogInPage({
+//     email:  process.env.EMAIL_LOGIN,
+//     password: process.env.PASSWORD_LOGIN,
+//   });
+
+//   console.log('Login button enabled:', await loginPopUp.isLogInButtonEnabled());
+
+//   // expect(await loginPopUp.isLogInButtonEnabled()).toBeTruthy();
+
+//   await loginPopUp.clickLogInButton();
+
+//   await loginPopUp.saveAuthStorage();
+// });
+
+// test('User can see their garage page', async ({ userGaragePage }) => {
+//   const loginPopUp = new LogInPage(userGaragePage);
+
+//   await loginPopUp.checkGaragePage();
+// });
 
 // const BASE_URL = 'https://guest:welcome2qauto@qauto.forstudy.space';
 
