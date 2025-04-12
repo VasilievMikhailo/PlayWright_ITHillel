@@ -22,6 +22,11 @@ export class LogInPage {
     await this.signInButton.click();
   }
 
+  async openGaragePage() {
+    await this.page.goto(process.env.URL_STORAGE_GARAGE);
+    await this.signInButton.click();
+  }
+
   async fillLogInPage({email, password}) {
     await this.emailLogInInput.fill(email);
     await this.passwordLogInInput.fill(password);
