@@ -17,5 +17,6 @@ COPY . .
 # Открываем порты для Playwright и тестов
 EXPOSE 3000
 
+
 # Запускаем тесты Playwright при запуске контейнера
 CMD ["npx", "playwright", "test"]
