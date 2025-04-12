@@ -6,23 +6,35 @@ import dotenv from 'dotenv';
 // import { test, expect, request } from '@playwright/test';
 // import fs from 'fs';
 import fs from 'fs/promises';
+import { chromium } from 'playwright';  // Импортируем Playwright для запуска браузера
 
 dotenv.config();
 
-test('LogIn on main page', async ({ page }) => {
+// Добавляем переменные для хранения браузера и страницы
+let browser;
+let page;
 
+beforeAll(async () => {
+  // Запуск браузера в headless режиме
+  browser = await chromium.launch({ headless: true });  // Включаем headless режим
+  page = await browser.newPage();
+});
+
+afterAll(async () => {
+  await browser.close(); // Закрываем браузер после всех тестов
+});
+
+test('LogIn on main page', async () => {
   const loginPopUp = new LogInPage(page);
 
   await loginPopUp.openLogInPopUp();
 
   await loginPopUp.fillLogInPage({
-    email:  process.env.EMAIL_LOGIN,
+    email: process.env.EMAIL_LOGIN,
     password: process.env.PASSWORD_LOGIN,
   });
 
   console.log('Login button enabled:', await loginPopUp.isLogInButtonEnabled());
-
-  // expect(await loginPopUp.isLogInButtonEnabled()).toBeTruthy();
 
   await loginPopUp.clickLogInButton();
 
@@ -46,13 +58,13 @@ async function waitForFile(filePath, timeout = 10000) {
   }
 }
 
-test('User can see their garage page', async ({ userGaragePage }) => {
-  const loginPopUp = new LogInPage(userGaragePage);
+test('User can see their garage page', async () => {
+  const loginPopUp = new LogInPage(page);
 
   await loginPopUp.checkGaragePage();
 
   // Очистка куков
-  await userGaragePage.context().clearCookies();
+  await page.context().clearCookies();
 
   const authStoragePath = '../tests/authStorage.json';
 
