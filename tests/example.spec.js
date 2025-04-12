@@ -10,18 +10,19 @@ import { chromium } from 'playwright';  // Импортируем Playwright д�
 
 dotenv.config();
 
-// Добавляем переменные для хранения браузера и страницы
-let browser;
-let page;
+test.describe('Test Suite', () => {
+  let page;
+  let browser;
 
-beforeAll(async () => {
-  // Запуск браузера в headless режиме
-  browser = await chromium.launch({ headless: true });  // Включаем headless режим
-  page = await browser.newPage();
-});
+  test.beforeAll(async () => {
+    // Запуск браузера в headless режиме
+    browser = await chromium.launch({ headless: true });
+    page = await browser.newPage();
+  });
 
-afterAll(async () => {
-  await browser.close(); // Закрываем браузер после всех тестов
+  test.afterAll(async () => {
+    await browser.close();  // Закрытие браузера после тестов
+  });
 });
 
 test('LogIn on main page', async () => {
