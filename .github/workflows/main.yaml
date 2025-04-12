@@ -23,10 +23,5 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
-      - name: Install Xvfb
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y xvfb
-
       - name: Run Playwright tests with Xvfb
         run: xvfb-run -a npx playwright test
