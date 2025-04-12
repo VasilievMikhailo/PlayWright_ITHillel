@@ -1,10 +1,6 @@
-import { test } from './fixtures';
-// import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';  // Импортируем необходимые функции из Playwright
 import { LogInPage } from '../Pages/LoginPage';
 import dotenv from 'dotenv';
-// import { test, expect } from '@playwright/test';
-// import { test, expect, request } from '@playwright/test';
-// import fs from 'fs';
 import fs from 'fs/promises';
 import { chromium } from 'playwright';  // Импортируем Playwright для запуска браузера
 
@@ -23,60 +19,142 @@ test.describe('Test Suite', () => {
   test.afterAll(async () => {
     await browser.close();  // Закрытие браузера после тестов
   });
-});
 
-test('LogIn on main page', async () => {
-  const loginPopUp = new LogInPage(page);
+  test('LogIn on main page', async () => {
+    const loginPopUp = new LogInPage(page);  // Передаем page в LoginPage
 
-  await loginPopUp.openLogInPopUp();
+    await loginPopUp.openLogInPopUp();
 
-  await loginPopUp.fillLogInPage({
-    email: process.env.EMAIL_LOGIN,
-    password: process.env.PASSWORD_LOGIN,
+    await loginPopUp.fillLogInPage({
+      email: process.env.EMAIL_LOGIN,
+      password: process.env.PASSWORD_LOGIN,
+    });
+
+    console.log('Login button enabled:', await loginPopUp.isLogInButtonEnabled());
+
+    await loginPopUp.clickLogInButton();
+
+    await loginPopUp.checkGaragePage();
+
+    await loginPopUp.saveAuthStorage();
   });
 
-  console.log('Login button enabled:', await loginPopUp.isLogInButtonEnabled());
-
-  await loginPopUp.clickLogInButton();
-
-  await loginPopUp.checkGaragePage();
-
-  await loginPopUp.saveAuthStorage();
-});
-
-async function waitForFile(filePath, timeout = 10000) {
-  const start = Date.now();
-  while (true) {
-    try {
-      await fs.access(filePath);  // Проверка на доступность файла
-      break;  // Файл найден, выходим из цикла
-    } catch (err) {
-      if (Date.now() - start > timeout) {
-        throw new Error(`Файл ${filePath} не был найден за ${timeout} мс`);
+  async function waitForFile(filePath, timeout = 10000) {
+    const start = Date.now();
+    while (true) {
+      try {
+        await fs.access(filePath);  // Проверка на доступность файла
+        break;  // Файл найден, выходим из цикла
+      } catch (err) {
+        if (Date.now() - start > timeout) {
+          throw new Error(`Файл ${filePath} не был найден за ${timeout} мс`);
+        }
+        await new Promise(resolve => setTimeout(resolve, 500));  // Ждем 500 мс перед следующей проверкой
       }
-      await new Promise(resolve => setTimeout(resolve, 500));  // Ждем 500 мс перед следующей проверкой
     }
   }
-}
 
-test('User can see their garage page', async () => {
-  const loginPopUp = new LogInPage(page);
+  test('User can see their garage page', async () => {
+    const loginPopUp = new LogInPage(page);  // Передаем page в LoginPage
 
-  await loginPopUp.checkGaragePage();
+    await loginPopUp.checkGaragePage();
 
-  // Очистка куков
-  await page.context().clearCookies();
+    // Очистка куков
+    await page.context().clearCookies();
 
-  const authStoragePath = '../tests/authStorage.json';
+    const authStoragePath = '../tests/authStorage.json';
 
-  // Используем асинхронный fs.access для проверки существования файла
-  try {
-    await fs.access(authStoragePath); // Проверка на доступность файла
-    await fs.writeFile(authStoragePath, JSON.stringify({})); // Очистка файла
-  } catch (err) {
-    console.log('Файл не найден или не доступен:', err.message);
-  }
+    // Используем асинхронный fs.access для проверки существования файла
+    try {
+      await fs.access(authStoragePath); // Проверка на доступность файла
+      await fs.writeFile(authStoragePath, JSON.stringify({})); // Очистка файла
+    } catch (err) {
+      console.log('Файл не найден или не доступен:', err.message);
+    }
+  });
 });
+
+
+
+// import { test } from './fixtures';
+// // import { test } from '@playwright/test';
+// import { LogInPage } from '../Pages/LoginPage';
+// import dotenv from 'dotenv';
+// // import { test, expect } from '@playwright/test';
+// // import { test, expect, request } from '@playwright/test';
+// // import fs from 'fs';
+// import fs from 'fs/promises';
+// import { chromium } from 'playwright';  // Импортируем Playwright для запуска браузера
+
+// dotenv.config();
+
+// test.describe('Test Suite', () => {
+//   let page;
+//   let browser;
+
+//   test.beforeAll(async () => {
+//     // Запуск браузера в headless режиме
+//     browser = await chromium.launch({ headless: true });
+//     page = await browser.newPage();
+//   });
+
+//   test.afterAll(async () => {
+//     await browser.close();  // Закрытие браузера после тестов
+//   });
+// });
+
+// test('LogIn on main page', async () => {
+//   const loginPopUp = new LogInPage(page);
+
+//   await loginPopUp.openLogInPopUp();
+
+//   await loginPopUp.fillLogInPage({
+//     email: process.env.EMAIL_LOGIN,
+//     password: process.env.PASSWORD_LOGIN,
+//   });
+
+//   console.log('Login button enabled:', await loginPopUp.isLogInButtonEnabled());
+
+//   await loginPopUp.clickLogInButton();
+
+//   await loginPopUp.checkGaragePage();
+
+//   await loginPopUp.saveAuthStorage();
+// });
+
+// async function waitForFile(filePath, timeout = 10000) {
+//   const start = Date.now();
+//   while (true) {
+//     try {
+//       await fs.access(filePath);  // Проверка на доступность файла
+//       break;  // Файл найден, выходим из цикла
+//     } catch (err) {
+//       if (Date.now() - start > timeout) {
+//         throw new Error(`Файл ${filePath} не был найден за ${timeout} мс`);
+//       }
+//       await new Promise(resolve => setTimeout(resolve, 500));  // Ждем 500 мс перед следующей проверкой
+//     }
+//   }
+// }
+
+// test('User can see their garage page', async () => {
+//   const loginPopUp = new LogInPage(page);
+
+//   await loginPopUp.checkGaragePage();
+
+//   // Очистка куков
+//   await page.context().clearCookies();
+
+//   const authStoragePath = '../tests/authStorage.json';
+
+//   // Используем асинхронный fs.access для проверки существования файла
+//   try {
+//     await fs.access(authStoragePath); // Проверка на доступность файла
+//     await fs.writeFile(authStoragePath, JSON.stringify({})); // Очистка файла
+//   } catch (err) {
+//     console.log('Файл не найден или не доступен:', err.message);
+//   }
+// });
 
 // test('POST to ADD a car, GET car by ID, DELETE the car by ID, DELETE again (negative case), and GET again (negative case)', async ({ page }) => {
 //   await page.goto(process.env.BASE_URL);
